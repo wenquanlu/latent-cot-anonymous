@@ -27,12 +27,17 @@ device = "cuda:0"
 
 
 
-def get_answer_for_manual(messages, num_steps):
+def get_answer_for_manual(question):
     model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125")
     model.eval().to(device)
 
     # Step 1: Use the chat template
+    messages = [
+        {"role": "system", "content": "You are a concise assistant. Always return only the final answer straightway."},
+        #{"role": "user", "content": "Q: What is 2 + 2? Final answer: 4"},
+        {"role": "user", "content": question}
+    ]
     chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
@@ -54,11 +59,11 @@ def get_answer_for_manual(messages, num_steps):
     # print(outputs)
     decoded_output = tokenizer.decode(output, skip_special_tokens=True)
 
-    print(decoded_output)
+    print(trim_output(decoded_output))
 
 
 # answer: single token
-def logit_lens(messages, num_steps):
+def logit_lens(question, num_steps):
     def capture_last_block_output(module, inp, out):
     # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
         hidden_states_per_step.append(out[0].detach()) 
@@ -67,7 +72,6 @@ def logit_lens(messages, num_steps):
     hidden_states_per_step = []  # will collect the hidden state after each recurrence
     model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125")
-    #print(tokenizer.chat_template)
 
     last_core_layer = model.transformer.core_block[-1]
     hook_handle = last_core_layer.register_forward_hook(capture_last_block_output)
@@ -76,7 +80,12 @@ def logit_lens(messages, num_steps):
     model.eval().to(device)
 
     # Step 1: Use the chat template
-
+    messages = [
+        {"role": "system", "content": "You are a concise assistant. Always return only the final answer straightway."},
+        {"role": "user", "content": "What is 3 + 2 - 1? Final answer: 5"},
+        {"role": "user", "content": "What is 2 - 1 + 5? Final answer: 6"},
+        {"role": "user", "content": question}
+    ]
     chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
@@ -96,8 +105,6 @@ def logit_lens(messages, num_steps):
 
     # print(outputs)
     print(f"Captured {len(hidden_states_per_step)} intermediate states")
-
-    # only select first output token
     selected_hidden = hidden_states_per_step[0: num_steps]
 
     for t, hidden in enumerate(selected_hidden, start=1):
@@ -107,7 +114,7 @@ def logit_lens(messages, num_steps):
         top_tokens = tokenizer.batch_decode(logits.topk(k = 5, dim=-1)[1][0, -1].tolist())
         print(f"Step {t} top prediction(s): {top_tokens}")
 
-def logit_coda_lens(messages, num_steps, coda_layer = 0):
+def logit_coda_lens(question, num_steps, coda_layer = 1):
     def capture_last_block_output(module, inp, out):
     # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
         print("hook called!")
@@ -125,6 +132,12 @@ def logit_coda_lens(messages, num_steps, coda_layer = 0):
     model.eval().to(device)
 
     # Step 1: Use the chat template
+    messages = [
+        {"role": "system", "content": "You are a concise assistant. Always return only the final answer straightway."},
+        {"role": "user", "content": "What is 3 + 2 - 1? Final answer: 5"},
+        {"role": "user", "content": "What is 2 - 1 + 5? Final answer: 6"},
+        {"role": "user", "content": question}
+    ]
     chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
@@ -144,8 +157,6 @@ def logit_coda_lens(messages, num_steps, coda_layer = 0):
 
     # print(outputs)
     print(f"Captured {len(hidden_states_per_step)} intermediate states")
-
-    # only select first output token
     selected_hidden = hidden_states_per_step[0: num_steps]
 
     for t, hidden in enumerate(selected_hidden, start=1):
@@ -153,7 +164,7 @@ def logit_coda_lens(messages, num_steps, coda_layer = 0):
         logits = model.lm_head(hidden_norm)         # shape: (batch, seq_len, vocab_size)
         print(logits.shape)
         top_tokens = tokenizer.batch_decode(logits.topk(k = 5, dim=-1)[1][0, -1].tolist())
-        print(f"token {t} top prediction(s): {top_tokens}")
+        print(f"Step {t} top prediction(s): {top_tokens}")
     
     pass
     output = outputs.sequences[0]
@@ -162,13 +173,29 @@ def logit_coda_lens(messages, num_steps, coda_layer = 0):
 
     print(trim_output(decoded_output))
 
-def coda_lens(messages, num_steps):
+def coda_lens(question, num_steps):
+    def capture_last_block_output(module, inp, out):
+    # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
+        hidden_states_per_step.append(out[0].detach()) 
+
     set_seed()
+    hidden_states_per_step = []  # will collect the hidden state after each recurrence
     model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125")
 
+    last_core_layer = model.transformer.core_block[-1]
+    hook_handle = last_core_layer.register_forward_hook(capture_last_block_output)
+
+
     model.eval().to(device)
 
+    # Step 1: Use the chat template
+    messages = [
+        {"role": "system", "content": "You are a concise assistant. Always return only the final answer straightway."},
+        {"role": "user", "content": "What is 3 + 2 - 1? Final answer: 5"},
+        {"role": "user", "content": "What is 2 - 1 + 5? Final answer: 6"},
+        {"role": "user", "content": question}
+    ]
     chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
@@ -192,8 +219,6 @@ def coda_lens(messages, num_steps):
             # decoded_output = tokenizer.decode(output, skip_special_tokens=True)
 
             # print(f"step {i} prediction", trim_output(decoded_output))
-            if len(outputs.scores) < 2:
-                continue
             logits = outputs.scores[-2]  # this is shape (1, vocab_size) for the most recent token
 
             topk_ids = logits.topk(k=5).indices[0]
@@ -201,35 +226,9 @@ def coda_lens(messages, num_steps):
             print(f"Step {i} top-5: {topk_tokens}")
 
 
-if __name__ == "__main__":
-    # messages = [
-    #     {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-    #     {"role": "user", "content": "3 + 2 - 1 = "},
-    #     {"role": "Huginn", "content": "4"},
-    #     {"role": "user", "content": "2 - 1 + 5 = "},
-    #     {"role": "Huginn", "content": "6"}
-    # ]
-    # question = [{"role": "user", "content": "1 + 2 + 3 = "}]
 
-    # messages = [
-    #     {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-    #     {"role": "user", "content": "not ( True ) and ( True ) is "},
-    #     {"role": "Huginn", "content": "False"},
-    #     {"role": "user", "content": "True and not not ( not False ) is "},
-    #     {"role": "Huginn", "content": "True"},
-    # ]
-    # question = [{"role": "user", "content": "False or ( False ) and not False is "}]
-    #get_answer_for_manual(question, num_steps)
-
-    messages = [
-        {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-        {"role": "user", "content": "Question: What is (7 + 5) - 6? Answer: "},
-        {"role": "Huginn", "content": "6"},
-        {"role": "user", "content": "Question: What is (4 + 8) - 9? Answer: "},
-        {"role": "Huginn", "content": "3"},
-    ]
-    question = [{"role": "user", "content": "Question: What is (7 - 4) + 1? Answer: "}]
-    get_answer_for_manual(messages + question, num_steps=64)
-    # logit_lens(messages + question, num_steps)
-    # logit_coda_lens(messages + question, num_steps)
-    # coda_lens(question, num_steps)
+question = "What is 4 + 5 - 4? Final answer: "
+#get_answer_for_manual(question)
+logit_lens(question, num_steps)
+logit_coda_lens(question, num_steps)
+coda_lens(question, num_steps)
