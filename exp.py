@@ -39,7 +39,7 @@ def get_answer_for_manual(messages, num_steps):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=num_steps, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -48,7 +48,7 @@ def get_answer_for_manual(messages, num_steps):
 
     # Step 4: Generate
     with torch.no_grad():
-        outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=num_steps)
+        outputs = model.generate(input_ids, GenerationConfig=config, tokenizer=tokenizer, num_steps=num_steps)
 
     output = outputs.sequences[0]
     # print(outputs)
