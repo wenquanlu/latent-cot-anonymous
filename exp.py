@@ -48,7 +48,7 @@ def get_answer_for_manual(messages, num_steps):
 
     # Step 4: Generate
     with torch.no_grad():
-        outputs = model.generate(input_ids, GenerationConfig=config, tokenizer=tokenizer, num_steps=num_steps)
+        outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=num_steps)
 
     output = outputs.sequences[0]
     # print(outputs)
