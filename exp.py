@@ -83,7 +83,7 @@ def logit_lens(messages, num_steps):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -131,7 +131,7 @@ def logit_coda_lens(messages, num_steps, coda_layer = 0):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -175,7 +175,7 @@ def coda_lens(messages, num_steps):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
