@@ -26,8 +26,9 @@ device = "cuda:0"
 
 import re
 
-def is_signed_numeric(s):
-    return bool(re.fullmatch(r'(-\d+|\d+|-)', s))
+def is_boolean(s):
+    bools = {"true", "false", "True", "False", "TRUE", "FALSE"}
+    return s in bools
 
 
 
@@ -172,6 +173,7 @@ def logit_coda_lens(model, tokenizer, messages, num_steps, select_recurr_steps =
 
 def coda_lens(model, tokenizer, messages, num_steps, topk = 1):
     set_seed()
+
     chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
@@ -189,21 +191,19 @@ def coda_lens(model, tokenizer, messages, num_steps, topk = 1):
     # Step 4: Generate
     with torch.no_grad():
         for i in range(1, num_steps + 1):
-            set_seed()
             outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=i)
             # output = outputs.sequences[0]
             # # print(outputs)
             # decoded_output = tokenizer.decode(output, skip_special_tokens=True)
 
             # print(f"step {i} prediction", trim_output(decoded_output))
-            # if len(outputs.scores) < 2:
-            #     continue
-            logits = outputs.scores[1]  # get the first answer token
+            if len(outputs.scores) < 2:
+                continue
+            logits = outputs.scores[-2]  # this is shape (1, vocab_size) for the most recent token
 
             topk_ids = logits.topk(k=topk).indices[0]
             topk_tokens = tokenizer.batch_decode(topk_ids.tolist())
-            print(topk_tokens)
-
+            print(f"Step {i} top-5: {topk_tokens}")
     
 
 
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     import copy
     import pickle
 
-    ds = load_dataset("EleutherAI/arithmetic", "arithmetic_1dc")
+    ds = load_dataset("maveriq/bigbenchhard", "boolean_expressions")
 
     num_example_context = 4
     messages = [
@@ -258,28 +258,27 @@ if __name__ == "__main__":
     ]
 
     for i in range(num_example_context):
-        messages.append({"role": "user", "content": ds["validation"][i]["context"]})
-        messages.append({"role": "Huginn", "content": ds["validation"][i]["completion"].strip()})
+        messages.append({"role": "user", "content": ds["train"][i]["input"]})
+        messages.append({"role": "Huginn", "content": ds["train"][i]["target"].strip()})
     
     results = []
-    signed_numeric = [0, 0, 0, 0]
+    bools = [0, 0, 0, 0]
     # load in dataset
-    for i in tqdm(range(num_example_context, len(ds['validation']))):
+    for i in tqdm(range(num_example_context, len(ds['train']))):
         test_message = copy.deepcopy(messages)
-        test_message.append({"role": "user", "content": ds["validation"][i]["context"]})
+        test_message.append({"role": "user", "content": ds["train"][i]["input"]})
         #get_answer_for_manual(model, tokenizer, test_message, 64)
-        coda_lens(model, tokenizer, test_message, 64)
-        exit()
         result = logit_coda_lens(model, tokenizer, test_message, 64)
+        print(result)
         for i in range(4):
-            if is_signed_numeric(result[i].strip()):
-                signed_numeric[i] += 1
+            if is_boolean(result[i].strip()):
+                bools[i] += 1
 
         results.append(result)
 
-    with open("arithmetic_results.pkl", "wb") as f:
+    with open("boolean_results.pkl", "wb") as f:
         pickle.dump(results, f)
-    print(signed_numeric)
+    print(bools)
     
 
     
