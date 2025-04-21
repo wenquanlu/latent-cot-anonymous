@@ -6,5 +6,5 @@
 #SBATCH --error=exp.err
 #SBATCH --output=exp.out
 #SBATCH --mail-type=END
-#SBATCH --mail-user=yuechuan_yang@brown.edu
+#SBATCH --mail-user=kyle_k_lee@brown.edu
 python exp.py
