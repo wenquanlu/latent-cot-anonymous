@@ -186,6 +186,7 @@ def coda_lens(messages, num_steps):
     # Step 4: Generate
     with torch.no_grad():
         for i in range(1, num_steps + 1):
+            set_seed(42)
             outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=i)
             # output = outputs.sequences[0]
             # # print(outputs)
@@ -202,33 +203,32 @@ def coda_lens(messages, num_steps):
 
 
 if __name__ == "__main__":
-    # messages = [
-    #     {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-    #     {"role": "user", "content": "3 + 2 - 1 = "},
-    #     {"role": "Huginn", "content": "4"},
-    #     {"role": "user", "content": "2 - 1 + 5 = "},
-    #     {"role": "Huginn", "content": "6"}
-    # ]
-    # question = [{"role": "user", "content": "1 + 2 + 3 = "}]
 
     # messages = [
     #     {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-    #     {"role": "user", "content": "not ( True ) and ( True ) is "},
-    #     {"role": "Huginn", "content": "False"},
-    #     {"role": "user", "content": "True and not not ( not False ) is "},
-    #     {"role": "Huginn", "content": "True"},
+    #     {"role": "user", "content": "Question: What is (7 + 5) - 6? Answer: "},
+    #     {"role": "Huginn", "content": "6"},
+    #     {"role": "user", "content": "Question: What is (4 + 8) - 9? Answer: "},
+    #     {"role": "Huginn", "content": "3"},
+    #     {"role": "user", "content": "Question: What is (9 + 8) * 2? Answer: "},
+    #     {"role": "Huginn", "content": "34"},
+    #     {"role": "user", "content": "Question: What is (4 - 7) - 3? Answer: "},
+    #     {"role": "Huginn", "content": "-6"},
+    #     {"role": "user", "content": "Question: What is (1 - 5) - 6? Answer: "},
+    #     {"role": "Huginn", "content": "-10"},
+    #     {"role": "user", "content": "Question: What is (1 - 9) * 5? Answer: "},
+    #     {"role": "Huginn", "content": "-40"},
+    #     {"role": "user", "content": "Question: What is (4 * 4) * 1? Answer: "},
+    #     {"role": "Huginn", "content": "16"},
+    #     {"role": "user", "content": "Question: What is (8 + 3) * 5? Answer: "},
+    #     {"role": "Huginn", "content": "55"},
     # ]
-    # question = [{"role": "user", "content": "False or ( False ) and not False is "}]
-    #get_answer_for_manual(question, num_steps)
-
+    # question = [{"role": "user", "content": "Question: What is (9 - 4) + 1? Answer: "},
+    #             {"role": "user", "content": "Question: What is (2 - 8) - 4? Answer: "},
+    #             {"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
+    
     messages = [
         {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-        {"role": "user", "content": "Question: What is (7 + 5) - 6? Answer: "},
-        {"role": "Huginn", "content": "6"},
-        {"role": "user", "content": "Question: What is (4 + 8) - 9? Answer: "},
-        {"role": "Huginn", "content": "3"},
-        {"role": "user", "content": "Question: What is (9 + 8) * 2? Answer: "},
-        {"role": "Huginn", "content": "34"},
         {"role": "user", "content": "Question: What is (4 - 7) - 3? Answer: "},
         {"role": "Huginn", "content": "-6"},
         {"role": "user", "content": "Question: What is (1 - 5) - 6? Answer: "},
@@ -236,13 +236,10 @@ if __name__ == "__main__":
         {"role": "user", "content": "Question: What is (1 - 9) * 5? Answer: "},
         {"role": "Huginn", "content": "-40"},
         {"role": "user", "content": "Question: What is (4 * 4) * 1? Answer: "},
-        {"role": "Huginn", "content": "16"},
-        {"role": "user", "content": "Question: What is (8 + 3) * 5? Answer: "},
-        {"role": "Huginn", "content": "55"},
+        {"role": "Huginn", "content": "16"}
     ]
-    question = [{"role": "user", "content": "Question: What is (9 - 4) + 1? Answer: "},
-                {"role": "user", "content": "Question: What is (2 - 8) - 4? Answer: "},
-                {"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
+    
+    question = [{"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
     get_answer_for_manual(messages + question, num_steps=64)
     # logit_lens(messages + question, num_steps)
     # logit_coda_lens(messages + question, num_steps)
