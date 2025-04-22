@@ -207,8 +207,8 @@ if __name__ == "__main__":
         data = json.load(f)
     ## 71 datasets in total
     messages = data[:4]
-    question = data[4]
-    
+    question = [data[4]]
+
     get_answer_for_manual(messages + question, num_steps=16)
     coda_lens(question, num_steps=16)
     # get_answer_for_manual(messages + question, num_steps=16)
