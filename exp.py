@@ -222,7 +222,7 @@ if __name__ == "__main__":
     
     print(messages)
     print(question)
-    # get_answer_for_manual(messages + question, num_steps=16)
-    # coda_lens(question, num_steps=16)
+    get_answer_for_manual(messages + question, num_steps=16)
+    coda_lens(question, num_steps=16)
 
     
