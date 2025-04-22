@@ -1,7 +1,7 @@
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import torch
-
+import json
 import random, numpy as np, torch
 
 def set_seed(seed=42):
@@ -203,46 +203,15 @@ def coda_lens(messages, num_steps):
 
 
 if __name__ == "__main__":
-
-    # messages = [
-    #     {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-    #     {"role": "user", "content": "Question: What is (7 + 5) - 6? Answer: "},
-    #     {"role": "Huginn", "content": "6"},
-    #     {"role": "user", "content": "Question: What is (4 + 8) - 9? Answer: "},
-    #     {"role": "Huginn", "content": "3"},
-    #     {"role": "user", "content": "Question: What is (9 + 8) * 2? Answer: "},
-    #     {"role": "Huginn", "content": "34"},
-    #     {"role": "user", "content": "Question: What is (4 - 7) - 3? Answer: "},
-    #     {"role": "Huginn", "content": "-6"},
-    #     {"role": "user", "content": "Question: What is (1 - 5) - 6? Answer: "},
-    #     {"role": "Huginn", "content": "-10"},
-    #     {"role": "user", "content": "Question: What is (1 - 9) * 5? Answer: "},
-    #     {"role": "Huginn", "content": "-40"},
-    #     {"role": "user", "content": "Question: What is (4 * 4) * 1? Answer: "},
-    #     {"role": "Huginn", "content": "16"},
-    #     {"role": "user", "content": "Question: What is (8 + 3) * 5? Answer: "},
-    #     {"role": "Huginn", "content": "55"},
-    # ]
-    # question = [{"role": "user", "content": "Question: What is (9 - 4) + 1? Answer: "},
-    #             {"role": "user", "content": "Question: What is (2 - 8) - 4? Answer: "},
-    #             {"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
+    with open('filtered_arithmetic_dataset.json', 'r') as f:
+        data = json.load(f)
+    ## 71 datasets in total
+    messages = data[:4]
+    question = data[4]
     
-    messages = [
-        {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-        {"role": "user", "content": "Question: What is (10 - 3) + 6? Answer: "},
-        {"role": "Huginn", "content": "13"},
-        {"role": "user", "content": "Question: What is (2 + 5) * 3? Answer: "},
-        {"role": "Huginn", "content": "21"},
-        {"role": "user", "content": "Question: What is (9 / 3) + 7? Answer: "},
-        {"role": "Huginn", "content": "10"},
-        {"role": "user", "content": "Question: What is (6 * 2) - 4? Answer: "},
-        {"role": "Huginn", "content": "8"}
-    ]
-
-    question = [{"role": "user", "content": "Question: What is (12 - 5) * 2? Answer: "}]
-
-
-    get_answer_for_manual(messages + question, num_steps=64)
-    # logit_lens(messages + question, num_steps)
-    # logit_coda_lens(messages + question, num_steps)
-    coda_lens(question, num_steps=64)
+    get_answer_for_manual(messages + question, num_steps=16)
+    coda_lens(question, num_steps=16)
+    # get_answer_for_manual(messages + question, num_steps=16)
+    # # logit_lens(messages + question, num_steps)
+    # # logit_coda_lens(messages + question, num_steps)
+    
