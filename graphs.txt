@@ -1,0 +1,30 @@
+
+
+
+
+
+
+graph 1:  (Logit Lens) Rank of final prediction vs Recurrence
+graph 2:  (Logit Lens) Percentage of decoded top token matching final prediction vs Recurrence
+graph 3:  (Logit Lens) Percentage of decoded top5 token are signed integer vs Recurrence
+
+graph 4:  (Coda Lens) Rank of final prediction vs Recurrence
+graph 5:  (Coda Lens) Percentage of decoded top token matching final prediction vs Recurrence
+graph 6:  (Coda Lens) Percentage of decoded top5 token are signed integer vs Recurrence
+
+
+graph 7: (logit lens) rank trajectory of intermediate step token / trajectory of final token prediction 
+graph 8: (coda lens) rank trajectory of intermediate step token / trajectory of final token prediction
+
+
+
+
+(Coda lens)  
+
+1st recurrence block
+2nd recurrence block
+3rd recurrence block
+4th recurrence block
+
+
+rank of final prediction 

@@ -373,12 +373,12 @@ def logit_coda_intermediate_rank_lens(model, tokenizer, messages, num_steps, int
         logits_at_last_token = logits[0, -1]
         sorted_logits, sorted_indices = torch.sort(logits_at_last_token, descending=True)
         rank = (sorted_indices == final_token_id).nonzero(as_tuple=False).item()
-        ranks.append(rank)
+        ranks.append(rank + 1)
 
         rank_inter1 = (sorted_indices == inter_token_id1).nonzero(as_tuple=False).item()
         rank_inter2 = (sorted_indices == inter_token_id2).nonzero(as_tuple=False).item()
         rank_inter_min = min(rank_inter1, rank_inter2)
-        ranks_intermediate.append(rank_inter_min)
+        ranks_intermediate.append(rank_inter_min + 1)
 
     
     first_prelude_handle.remove()
@@ -474,8 +474,8 @@ if __name__ == "__main__":
     from tqdm import tqdm
     import copy
     import pickle
-
-    ds = load_dataset("EleutherAI/arithmetic", "arithmetic_1dc")
+    import json
+    ds = json.load(open("filtered_arithmetic_dataset.json", "r"))
 
     num_example_context = 4
     messages = [
@@ -483,8 +483,8 @@ if __name__ == "__main__":
     ]
 
     for i in range(num_example_context):
-        messages.append({"role": "user", "content": ds["validation"][i]["context"]})
-        messages.append({"role": "Huginn", "content": ds["validation"][i]["completion"].strip()})
+        messages.append({"role": "user", "content": ds[i]["context"]})
+        messages.append({"role": "Huginn", "content": ds[i]["completion"].strip()})
     
     results = []
     # signed_numeric = [0 for i in range(68)]
@@ -503,18 +503,21 @@ if __name__ == "__main__":
     #    pickle.dump(results, f)
 
 
-
-    for i in tqdm(range(num_example_context, 100 + num_example_context)):
+    rank_inters = []
+    for i in tqdm(range(num_example_context, len(ds))):
         test_message = copy.deepcopy(messages)
-        test_message.append({"role": "user", "content": ds["validation"][i]["context"]})
-        result = logit_coda_lens(model, tokenizer, test_message, 16, topk=5)
+        test_message.append({"role": "user", "content": ds[i]["context"]})
+        result, rank_inter = logit_coda_intermediate_rank_lens(model, tokenizer, test_message, num_steps=16, intermediate_token=ds[i]["intermediate"].strip())
 
         results.append(result)
+        rank_inters.append(rank_inter)
 
-    with open("arithmetic_results_top5_16.pkl", "wb") as f:
-        pickle.dump(results, f)
-    
-
+    print(results)
+    print(rank_inters)
+    with open("cot_weights/arithmetic_correct_rank_results_16.pkl", "wb") as f:
+       pickle.dump(results, f)
+    with open("cot_weights/arithmetic_inter_rank_results_16.pkl", "wb") as f:
+       pickle.dump(rank_inters, f)
     
         #get_answer_for_manual(model, tokenizer, test_message, 64)
     # A for loop

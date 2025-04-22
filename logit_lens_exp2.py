@@ -109,6 +109,16 @@ def logit_coda_lens(model, tokenizer, messages, num_steps, select_recurr_steps =
     first_coda_states_per_step = []  # will collect the hidden state after each recurrence
     second_coda_states_per_step = []
     recurrent_states = []
+    first_prelude_states = []
+    second_prelude_states = []
+
+    #print(len(model.transformer.prelude))
+
+    def capture_first_prelude(module, inp, out):
+    # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
+        first_prelude_states.append(out[0].detach()) 
+    def capture_second_prelude(module, inp, out):
+        second_prelude_states.append(out[0].detach()) 
     def capture_last_block_output(module, inp, out):
     # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
         recurrent_states.append(out[0].detach()) 
@@ -119,11 +129,18 @@ def logit_coda_lens(model, tokenizer, messages, num_steps, select_recurr_steps =
 
     def capture_second_coda_layer_output(module, inp, out):
         second_coda_states_per_step.append(out[0].detach())
+    
     set_seed()
 
     first_coda_layer = model.transformer.coda[0]
     second_coda_layer = model.transformer.coda[1]
     last_core_layer = model.transformer.core_block[-1]
+    #print(len(model.transformer.core_block))
+    first_prelude_handle = model.transformer.prelude[0].register_forward_hook(capture_first_prelude)
+    second_prelude_handle = model.transformer.prelude[1].register_forward_hook(capture_second_prelude)
+    core1_hook_handle = model.transformer.core_block[0].register_forward_hook(capture_last_block_output)
+    core2_hook_handle = model.transformer.core_block[1].register_forward_hook(capture_last_block_output)
+    core3_hook_handle = model.transformer.core_block[2].register_forward_hook(capture_last_block_output)
     hook_handle = last_core_layer.register_forward_hook(capture_last_block_output)
     first_hook_handle = first_coda_layer.register_forward_hook(capture_first_coda_layer_output)
     second_hook_handle = second_coda_layer.register_forward_hook(capture_second_coda_layer_output)
@@ -148,10 +165,11 @@ def logit_coda_lens(model, tokenizer, messages, num_steps, select_recurr_steps =
 
 
     # only select first output token
-    selected_hidden = [recurrent_states[i-1] for i in select_recurr_steps]
+    selected_hidden = [first_prelude_states[0], second_prelude_states[0]]
+    selected_hidden += recurrent_states[:num_steps * 4]
     # only select first output token
     selected_hidden += [first_coda_states_per_step[0], second_coda_states_per_step[0]]
-
+    print("selected hidden length", len(selected_hidden))
     ret = []
     
     for t, hidden in enumerate(selected_hidden, start=1):
@@ -159,6 +177,12 @@ def logit_coda_lens(model, tokenizer, messages, num_steps, select_recurr_steps =
         logits = model.lm_head(hidden_norm)         # shape: (batch, seq_len, vocab_size)
         top_tokens = tokenizer.batch_decode(logits.topk(k = topk, dim=-1)[1][0, -1].tolist())
         ret += top_tokens
+    
+    first_prelude_handle.remove()
+    second_prelude_handle.remove()
+    core1_hook_handle.remove()
+    core2_hook_handle.remove()
+    core3_hook_handle.remove()
     hook_handle.remove()
     first_hook_handle.remove()
     second_hook_handle.remove()
@@ -172,8 +196,8 @@ def logit_coda_lens(model, tokenizer, messages, num_steps, select_recurr_steps =
     # print(trim_output(decoded_output))
 
 def coda_lens(model, tokenizer, messages, num_steps, topk = 1):
+    ret = []
     set_seed()
-
     chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
@@ -191,20 +215,122 @@ def coda_lens(model, tokenizer, messages, num_steps, topk = 1):
     # Step 4: Generate
     with torch.no_grad():
         for i in range(1, num_steps + 1):
+            set_seed()
             outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=i)
             # output = outputs.sequences[0]
             # # print(outputs)
             # decoded_output = tokenizer.decode(output, skip_special_tokens=True)
 
             # print(f"step {i} prediction", trim_output(decoded_output))
-            if len(outputs.scores) < 2:
-                continue
-            logits = outputs.scores[-2]  # this is shape (1, vocab_size) for the most recent token
+            # if len(outputs.scores) < 2:
+            #     continue
+            logits = outputs.scores[0]  # get the first answer token
 
             topk_ids = logits.topk(k=topk).indices[0]
             topk_tokens = tokenizer.batch_decode(topk_ids.tolist())
-            print(f"Step {i} top-5: {topk_tokens}")
+            ret += topk_tokens
+    return ret
+
+def get_final_predicted_logit(model, hidden):
+    hidden_norm = model.transformer.ln_f(hidden)
+    logits = model.lm_head(hidden_norm)         # shape: (batch, seq_len, vocab_size)
+    top_token = logits.topk(k = 1, dim=-1)[1][0, -1].item()
+    return top_token
+
+def logit_coda_rank_lens(model, tokenizer, messages, num_steps, select_recurr_steps = [32, 64], topk = 1):
+    first_coda_states_per_step = []  # will collect the hidden state after each recurrence
+    second_coda_states_per_step = []
+    recurrent_states = []
+    first_prelude_states = []
+    second_prelude_states = []
+
+    #print(len(model.transformer.prelude))
+
+    def capture_first_prelude(module, inp, out):
+    # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
+        first_prelude_states.append(out[0].detach()) 
+    def capture_second_prelude(module, inp, out):
+        second_prelude_states.append(out[0].detach()) 
+    def capture_last_block_output(module, inp, out):
+    # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
+        recurrent_states.append(out[0].detach()) 
+
+    def capture_first_coda_layer_output(module, inp, out):
+    # SandwichBlock returns (hidden_state, attn_map); grab the hidden state tensor
+        first_coda_states_per_step.append(out[0].detach()) 
+
+    def capture_second_coda_layer_output(module, inp, out):
+        second_coda_states_per_step.append(out[0].detach())
     
+    set_seed()
+
+    first_coda_layer = model.transformer.coda[0]
+    second_coda_layer = model.transformer.coda[1]
+    last_core_layer = model.transformer.core_block[-1]
+    #print(len(model.transformer.core_block))
+    first_prelude_handle = model.transformer.prelude[0].register_forward_hook(capture_first_prelude)
+    second_prelude_handle = model.transformer.prelude[1].register_forward_hook(capture_second_prelude)
+    core1_hook_handle = model.transformer.core_block[0].register_forward_hook(capture_last_block_output)
+    core2_hook_handle = model.transformer.core_block[1].register_forward_hook(capture_last_block_output)
+    core3_hook_handle = model.transformer.core_block[2].register_forward_hook(capture_last_block_output)
+    hook_handle = last_core_layer.register_forward_hook(capture_last_block_output)
+    first_hook_handle = first_coda_layer.register_forward_hook(capture_first_coda_layer_output)
+    second_hook_handle = second_coda_layer.register_forward_hook(capture_second_coda_layer_output)
+
+    # Step 1: Use the chat template
+    chat_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+    # Step 2: Encode WITHOUT adding special tokens again (they're already in the template)
+    input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
+
+    # Step 3: Define a custom generation config (same as before)
+    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+                            use_cache=True,
+                            do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
+                            return_dict_in_generate=True,
+                            eos_token_id=65505,bos_token_id=65504,pad_token_id=65509, num_return_sequences=1)
+
+
+    # Step 4: Generate
+    with torch.no_grad():
+        outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=num_steps)
+    
+    final_token_id = get_final_predicted_logit(model, second_coda_states_per_step[0])
+
+    # only select first output token
+    selected_hidden = [first_prelude_states[0], second_prelude_states[0]]
+    selected_hidden += recurrent_states[:num_steps * 4]
+    # only select first output token
+    selected_hidden += [first_coda_states_per_step[0], second_coda_states_per_step[0]]
+    print("selected hidden length", len(selected_hidden))
+    ranks = []
+    
+    for t, hidden in enumerate(selected_hidden, start=1):
+        hidden_norm = model.transformer.ln_f(hidden)
+        logits = model.lm_head(hidden_norm)         # shape: (batch, seq_len, vocab_size)
+        logits_at_last_token = logits[0, -1]
+        sorted_logits, sorted_indices = torch.sort(logits_at_last_token, descending=True)
+        rank = (sorted_indices == final_token_id).nonzero(as_tuple=False).item()
+        ranks.append(rank)
+    
+    first_prelude_handle.remove()
+    second_prelude_handle.remove()
+    core1_hook_handle.remove()
+    core2_hook_handle.remove()
+    core3_hook_handle.remove()
+    hook_handle.remove()
+    first_hook_handle.remove()
+    second_hook_handle.remove()
+    return ranks
+    
+    # pass
+    # output = outputs.sequences[0]
+    # # print(outputs)
+    # decoded_output = tokenizer.decode(output, skip_special_tokens=True)
+
+    # print(trim_output(decoded_output))
+
+
 
 
 if __name__ == "__main__":
@@ -262,23 +388,31 @@ if __name__ == "__main__":
         messages.append({"role": "Huginn", "content": ds["train"][i]["target"].strip()})
     
     results = []
-    bools = [0, 0, 0, 0]
+    bools = [0 for i in range(68)]
     # load in dataset
-    for i in tqdm(range(num_example_context, len(ds['train']))):
+    for i in tqdm(range(num_example_context, num_example_context + 100)):#len(ds['train']))):
         test_message = copy.deepcopy(messages)
         test_message.append({"role": "user", "content": ds["train"][i]["input"]})
         #get_answer_for_manual(model, tokenizer, test_message, 64)
-        result = logit_coda_lens(model, tokenizer, test_message, 64)
-        print(result)
-        for i in range(4):
-            if is_boolean(result[i].strip()):
-                bools[i] += 1
-
-        results.append(result)
-
-    with open("boolean_results.pkl", "wb") as f:
+        #result = coda_lens(model, tokenizer, test_message, 16)
+        result = logit_coda_rank_lens(model, tokenizer, test_message, 16)
+        results.append([i + 1 for i in result])
+        #results.append(result)
+    
+    print(results)
+    with open("boolean_rank_results_16.pkl", "wb") as f:
         pickle.dump(results, f)
-    print(bools)
+    #     result = logit_coda_lens(model, tokenizer, test_message, 16)
+    #     print(result)
+    #     for i in range(68):
+    #         if is_boolean(result[i].strip()):
+    #             bools[i] += 1
+
+    #     results.append(result)
+
+    # with open("boolean_results_16.pkl", "wb") as f:
+    #     pickle.dump(results, f)
+    # print(bools)
     
 
     
