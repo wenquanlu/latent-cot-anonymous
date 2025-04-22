@@ -207,7 +207,7 @@ if __name__ == "__main__":
         data = json.load(f)
     ## 71 datasets in total
     msgs = data[:4]
-    question = [data[5]]
+    question = [data[6]]
     # print(msgs)
     # print(question)
     
