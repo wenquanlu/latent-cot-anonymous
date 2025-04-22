@@ -206,12 +206,23 @@ if __name__ == "__main__":
     with open('filtered_arithmetic_dataset.json', 'r') as f:
         data = json.load(f)
     ## 71 datasets in total
-    messages = data[:4]
+    msgs = data[:4]
     question = [data[4]]
+    # print(msgs)
+    # print(question)
 
-    get_answer_for_manual(messages + question, num_steps=16)
-    coda_lens(question, num_steps=16)
+    num_example_context = 4
+    messages = [
+        {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
+    ]
+
+    for i in range(len(msgs)):
+        messages.append({"role": "user", "content": data[i]["context"]})
+        messages.append({"role": "Huginn", "content": data[i]["completion"].strip()})
+    
+    print(messages)
+    print(question)
     # get_answer_for_manual(messages + question, num_steps=16)
-    # # logit_lens(messages + question, num_steps)
-    # # logit_coda_lens(messages + question, num_steps)
+    # coda_lens(question, num_steps=16)
+
     
