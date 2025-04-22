@@ -39,7 +39,7 @@ def get_answer_for_manual(messages, num_steps):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -83,7 +83,7 @@ def logit_lens(messages, num_steps):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -131,7 +131,7 @@ def logit_coda_lens(messages, num_steps, coda_layer = 0):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -175,7 +175,7 @@ def coda_lens(messages, num_steps):
     input_ids = tokenizer.encode(chat_input, return_tensors="pt", add_special_tokens=False).to(device)
 
     # Step 3: Define a custom generation config (same as before)
-    config = GenerationConfig(max_length=512, stop_strings=["<|end_text|>", "<|end_turn|>"], 
+    config = GenerationConfig(max_length=256, stop_strings=["<|end_text|>", "<|end_turn|>"], 
                             use_cache=True,
                             do_sample=False, temperature=None, top_k=None, top_p=None, min_p=None, 
                             return_dict_in_generate=True,
@@ -228,18 +228,19 @@ if __name__ == "__main__":
     #             {"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
     
     messages = [
-        {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-        {"role": "user", "content": "Question: What is (4 - 7) - 3? Answer: "},
-        {"role": "Huginn", "content": "-6"},
-        {"role": "user", "content": "Question: What is (1 - 5) - 6? Answer: "},
-        {"role": "Huginn", "content": "-10"},
-        {"role": "user", "content": "Question: What is (1 - 9) * 5? Answer: "},
-        {"role": "Huginn", "content": "-40"},
-        {"role": "user", "content": "Question: What is (4 * 4) * 1? Answer: "},
-        {"role": "Huginn", "content": "16"}
+    {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
+    {"role": "user", "content": "Question: What is (3 + 2) * 2? Answer: "},
+    {"role": "Huginn", "content": "10"},
+    {"role": "user", "content": "Question: What is (6 - 1) + 4? Answer: "},
+    {"role": "Huginn", "content": "9"},
+    {"role": "user", "content": "Question: What is (8 / 2) + 3? Answer: "},
+    {"role": "Huginn", "content": "7"},
+    {"role": "user", "content": "Question: What is (5 * 3) - 2? Answer: "},
+    {"role": "Huginn", "content": "13"}
     ]
-    
-    question = [{"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
+
+    question = [{"role": "user", "content": "Question: What is (7 + 1) * 5? Answer: "}]
+
     get_answer_for_manual(messages + question, num_steps=64)
     # logit_lens(messages + question, num_steps)
     # logit_coda_lens(messages + question, num_steps)
