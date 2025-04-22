@@ -210,7 +210,7 @@ if __name__ == "__main__":
     question = [data[4]]
     # print(msgs)
     # print(question)
-
+    
     num_example_context = 4
     messages = [
         {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
@@ -220,7 +220,10 @@ if __name__ == "__main__":
         messages.append({"role": "user", "content": data[i]["context"]})
         messages.append({"role": "Huginn", "content": data[i]["completion"].strip()})
     
-    print(messages)
+    question[0]["role"] = "user"
+    question[0]["content"] = question[0]["context"]
+        
+    # print(messages)
     print(question)
     get_answer_for_manual(messages + question, num_steps=16)
     coda_lens(question, num_steps=16)
