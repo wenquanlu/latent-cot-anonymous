@@ -228,18 +228,19 @@ if __name__ == "__main__":
     #             {"role": "user", "content": "Question: What is (2 * 4) * 6? Answer: "}]
     
     messages = [
-    {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
-    {"role": "user", "content": "Question: What is (3 + 2) * 2? Answer: "},
-    {"role": "Huginn", "content": "10"},
-    {"role": "user", "content": "Question: What is (6 - 1) + 4? Answer: "},
-    {"role": "Huginn", "content": "9"},
-    {"role": "user", "content": "Question: What is (8 / 2) + 3? Answer: "},
-    {"role": "Huginn", "content": "7"},
-    {"role": "user", "content": "Question: What is (5 * 3) - 2? Answer: "},
-    {"role": "Huginn", "content": "13"}
+        {"role": "system", "content": "You are a concise and helpful assistant. Always return only the final answer straightway."},
+        {"role": "user", "content": "Question: What is (10 - 3) + 6? Answer: "},
+        {"role": "Huginn", "content": "13"},
+        {"role": "user", "content": "Question: What is (2 + 5) * 3? Answer: "},
+        {"role": "Huginn", "content": "21"},
+        {"role": "user", "content": "Question: What is (9 / 3) + 7? Answer: "},
+        {"role": "Huginn", "content": "10"},
+        {"role": "user", "content": "Question: What is (6 * 2) - 4? Answer: "},
+        {"role": "Huginn", "content": "8"}
     ]
 
-    question = [{"role": "user", "content": "Question: What is (7 + 1) * 5? Answer: "}]
+    question = [{"role": "user", "content": "Question: What is (12 - 5) * 2? Answer: "}]
+
 
     get_answer_for_manual(messages + question, num_steps=64)
     # logit_lens(messages + question, num_steps)
