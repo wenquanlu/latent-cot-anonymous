@@ -1,20 +1,21 @@
 import pickle
 import matplotlib.pyplot as plot
 
-inter_rank = pickle.load(open("cot_weights/arithmetic_inter_rank_results_16.pkl", "rb"))
-correct_rank = pickle.load(open("cot_weights/arithmetic_correct_rank_results_16.pkl", "rb"))
-print(len(correct_rank))
-inter_results = [0 for i in range(68)]
-correct_results = [0 for i in range(68)]
+inter_rank = pickle.load(open("cot_weights/coda_arithmetic_inter_rank_16.pkl", "rb"))
+correct_rank = pickle.load(open("cot_weights/coda_arithmetic_correct_rank_16.pkl", "rb"))
+print(inter_rank)
+inter_results = [0 for i in range(64)]
+correct_results = [0 for i in range(64)]
 
 for row in inter_rank:
-    for i in range(68):
+    for i in range(64):
         inter_results[i] += row[i]
     pass
 
 for row in correct_rank:
-    for i in range(68):
+    for i in range(64):
         correct_results[i] += row[i]
+print(inter_results)
 
 inter_average_ranks = [result/67 for result in inter_results]
 correct_average_ranks = [result/67 for result in correct_results]
@@ -26,23 +27,23 @@ correct_block3_recurrences = []
 # block4_recurrences = []
 
 for i in range(64):
-    if i%4 == 2:
-        inter_block3_recurrences.append(inter_average_ranks[i + 2])
+    if i%4 == 0:
+        inter_block3_recurrences.append(inter_average_ranks[i])
 for i in range(64):
-    if i%4 == 2:
-        correct_block3_recurrences.append(correct_average_ranks[i + 2])
+    if i%4 == 0:
+        correct_block3_recurrences.append(correct_average_ranks[i])
 
 
 # plot.plot(range(1, 17), block1_recurrences, label="Recurrent Block 1")
 # plot.plot(range(1, 17), block2_recurrences, label="Recurrent Block 2")
-plot.plot(range(1, 17), inter_block3_recurrences, label="Intermediate (Recurrent Block 3))")
-plot.plot(range(1, 17), correct_block3_recurrences, label="Final (Recurrent Block 3)")
-plot.title("Logit Lens Rank Trajectory of Final Result Token and Intermediate Result\nToken over Recurrences on Questions that Model Answers Correctly")
+plot.plot(range(1, 17), inter_block3_recurrences, label="Intermediate (Recurrent Block 1))")
+plot.plot(range(1, 17), correct_block3_recurrences, label="Final (Recurrent Block 1)")
+plot.title("Coda Lens Rank Trajectory of Final Result Token and Intermediate Result\nToken over Recurrences on Questions that Model Answers Correctly")
 plot.yscale("log")
 plot.ylabel("Rank")
 plot.xlabel("Recurrence")
 plot.legend()
-plot.savefig("graphs/arithmetic_inter_block3.png")
+plot.savefig("graphs/coda_arithmetic_inter_block1.png")
 # plot.plot(range(1, 17), block4_recurrences, label="Recurrent Block 4")
 
 # plot.legend()

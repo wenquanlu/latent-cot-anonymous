@@ -4,7 +4,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import random, numpy as np
 from tqdm import tqdm
 
-ds = load_dataset("EleutherAI/arithmetic", "arithmetic_1dc")
+import json
+single_digit_rows = json.load(open("filtered_arithmetic_dataset.json", "r"))
 
 def operator(s, num1, num2):
     if s == "+":
@@ -79,7 +80,7 @@ def get_answer_for_manual(model, tokenizer, messages, num_steps):
     # print(outputs)
     decoded_output = tokenizer.decode(output, skip_special_tokens=True)
 
-    return trim_output(decoded_output)
+    return decoded_output
 
 
 model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True)
@@ -91,15 +92,8 @@ import copy
 import pickle
 
 
-import re
-single_digit_rows = []
-for row in ds["validation"]:
-    if len(row["completion"].strip()) == 1:
-        if single_digit_test(re.findall(r'[\d]+|[+\-*]', row['context'])) and len(row['completion'].strip()) == 1:
-            single_digit_rows.append(row)
 
 
-print(len(single_digit_rows))
 
 num_example_context = 4
 messages = [
@@ -114,17 +108,17 @@ results = []
 acc = 0
 filtered_dataset = single_digit_rows[:4]
 # load in dataset
-for i in tqdm(range(num_example_context, len(single_digit_rows))): # , 100 + num_example_context)): #
+for i in tqdm(range(num_example_context, 1 + num_example_context)):#len(single_digit_rows))): # , 100 + num_example_context)): #
     test_message = copy.deepcopy(messages)
     test_message.append({"role": "user", "content": single_digit_rows[i]["context"]})
     result = get_answer_for_manual(model, tokenizer, test_message, 16)
-    print("correct", single_digit_rows[i]["completion"])
+    #print("correct", single_digit_rows[i]["completion"])
     print("predict", result)
     
-    if result == single_digit_rows[i]["completion"].strip():
-        single_digit_rows[i]["intermediate"] = get_intermediate(re.findall(r'[\d]+|[+\-*]', single_digit_rows[i]['context']))
-        filtered_dataset.append(single_digit_rows[i])
-        acc += 1
+    # if result == single_digit_rows[i]["completion"].strip():
+    #     single_digit_rows[i]["intermediate"] = get_intermediate(re.findall(r'[\d]+|[+\-*]', single_digit_rows[i]['context']))
+    #     filtered_dataset.append(single_digit_rows[i])
+    #     acc += 1
 # import json
 # with open("filtered_arithmetic_dataset.json", "w") as f:
 #     json.dump(filtered_dataset, f, indent=4) 
