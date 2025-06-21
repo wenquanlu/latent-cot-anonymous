@@ -3,9 +3,11 @@ import matplotlib.pyplot as plot
 
 inter_rank = pickle.load(open("cot_weights/arithmetic_inter_rank_results_16.pkl", "rb"))
 correct_rank = pickle.load(open("cot_weights/arithmetic_correct_rank_results_16.pkl", "rb"))
+the_rank = pickle.load(open("cot_weights/arithmetic_the_rank_results_16.pkl", "rb"))
 print(len(correct_rank))
 inter_results = [0 for i in range(68)]
 correct_results = [0 for i in range(68)]
+the_results = [0 for i in range(68)]
 
 for row in inter_rank:
     for i in range(68):
@@ -16,13 +18,22 @@ for row in correct_rank:
     for i in range(68):
         correct_results[i] += row[i]
 
+
+for row in the_rank:
+    for i in range(68):
+        the_results[i] += row[i]
+print(inter_results)
+
+
 inter_average_ranks = [result/67 for result in inter_results]
 correct_average_ranks = [result/67 for result in correct_results]
+the_average_ranks = [result/67 for result in the_results]
 
 # block1_recurrences = []
 # block2_recurrences = []
 inter_block3_recurrences = []
 correct_block3_recurrences = []
+the_block3_recurrences = []
 # block4_recurrences = []
 
 for i in range(64):
@@ -31,17 +42,25 @@ for i in range(64):
 for i in range(64):
     if i%4 == 2:
         correct_block3_recurrences.append(correct_average_ranks[i + 2])
+for i in range(64):
+    if i%4 == 2:
+        the_block3_recurrences.append(the_average_ranks[i + 2])
 
 
 # plot.plot(range(1, 17), block1_recurrences, label="Recurrent Block 1")
 # plot.plot(range(1, 17), block2_recurrences, label="Recurrent Block 2")
-plot.plot(range(1, 17), inter_block3_recurrences, label="Intermediate (Recurrent Block 3))")
-plot.plot(range(1, 17), correct_block3_recurrences, label="Final (Recurrent Block 3)")
-plot.title("Logit Lens Rank Trajectory of Final Result Token and Intermediate Result\nToken over Recurrences on Questions that Model Answers Correctly")
+plot.plot(range(1, 17), inter_block3_recurrences, label="Intermediate Token", linewidth=2)
+plot.plot(range(1, 17), correct_block3_recurrences, label="Final Token", linewidth=2)
+plot.plot(range(1, 17), the_block3_recurrences, label="Random Token: 'the'", linewidth=2)
+#plot.title("Logit Lens Rank Trajectory of Final Result Token and Intermediate Result\nToken over Recurrences on Questions that Model Answers Correctly")
 plot.yscale("log")
-plot.ylabel("Rank")
-plot.xlabel("Recurrence")
-plot.legend()
+plot.ylabel("Rank", fontsize=20)
+plot.xlabel("Recurrent Steps", fontsize=20)
+plot.xticks(fontsize=17)
+plot.yticks(fontsize=17)
+plot.title("Logit Lens at $R_3$")
+plot.legend(fontsize=14, loc='upper right', bbox_to_anchor=(0.98, 0.6))
+plot.tight_layout()
 plot.savefig("graphs/arithmetic_inter_block3.png")
 # plot.plot(range(1, 17), block4_recurrences, label="Recurrent Block 4")
 

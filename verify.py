@@ -108,7 +108,7 @@ results = []
 acc = 0
 filtered_dataset = single_digit_rows[:4]
 # load in dataset
-for i in tqdm(range(num_example_context, 1 + num_example_context)):#len(single_digit_rows))): # , 100 + num_example_context)): #
+for i in tqdm(range(num_example_context, len(single_digit_rows))): # , 100 + num_example_context)): #
     test_message = copy.deepcopy(messages)
     test_message.append({"role": "user", "content": single_digit_rows[i]["context"]})
     result = get_answer_for_manual(model, tokenizer, test_message, 16)

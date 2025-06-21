@@ -137,18 +137,18 @@ if __name__ == "__main__":
         for i, row in enumerate(intermediate_coda_token):
             intermediate_coda_token[i] = tokenizer.batch_decode(row)
         results.append([intermediate_coda_token[i] for i in range(16 * 4)])
-        rank_results.append([top_token_rank[i] for i in range(16*4)])
+        rank_results.append([top_token_rank[i] for i in range(16*4+2)])
         intermediate_coda_token.clear()
         top_token_rank.clear()
     
     print(rank_results)
     print(results)
-    with open("coda_arithmetic_rank_16.pkl", "wb") as f:
+    with open("coda_arithmetic_rank_16_with_prelude.pkl", "wb") as f:
         pickle.dump(rank_results, f)
         
     
     #print(results)
-    with open("coda_arithmetic_results_top5_16.pkl", "wb") as f:
+    with open("coda_arithmetic_results_top5_16_with_prelude.pkl", "wb") as f:
         pickle.dump(results, f)
     
         #get_answer_for_manual(model, tokenizer, test_message, 64)

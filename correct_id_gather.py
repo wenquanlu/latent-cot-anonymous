@@ -105,6 +105,7 @@ def coda_lens(model, tokenizer, messages, num_steps):
     # Step 4: Generate
     with torch.no_grad():
         for i in range(1, num_steps + 1):
+            set_seed()
             outputs = model.generate(input_ids, config, tokenizer=tokenizer, num_steps=i)
             # output = outputs.sequences[0]
             # # print(outputs)
