@@ -46,12 +46,6 @@ def set_seed(seed=42):
     torch.backends.cudnn.benchmark = False
 
 
-def find_sublist_index(lst, sub):
-    for i in range(len(lst) - len(sub) + 1):
-        if lst[i:i + len(sub)] == sub:
-            return i
-    return -1  # Not found
-
 def trim_output(out):
     return out.split("\n")[-1]
 
@@ -88,10 +82,9 @@ model.eval().to(device)
 from datasets import load_dataset
 from tqdm import tqdm
 import copy
-import pickle
-
-
 import re
+
+
 single_digit_rows = []
 for row in ds["validation"]:
     if len(row["completion"].strip()) == 1:
@@ -125,7 +118,8 @@ for i in tqdm(range(num_example_context, len(single_digit_rows))): # , 100 + num
         single_digit_rows[i]["intermediate"] = get_intermediate(re.findall(r'[\d]+|[+\-*]', single_digit_rows[i]['context']))
         filtered_dataset.append(single_digit_rows[i])
         acc += 1
-# import json
-# with open("filtered_arithmetic_dataset.json", "w") as f:
-#     json.dump(filtered_dataset, f, indent=4) 
-# print("acc:", acc)
+
+import json
+with open("filtered_arithmetic_dataset.json", "w") as f:
+    json.dump(filtered_dataset, f, indent=4) 
+print("acc:", acc)
