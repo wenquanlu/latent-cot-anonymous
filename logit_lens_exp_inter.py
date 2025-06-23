@@ -93,9 +93,11 @@ def logit_coda_intermediate_rank_lens(model, tokenizer, messages, num_steps, int
     print("selected hidden length", len(selected_hidden))
     ranks = []
     ranks_intermediate = []
+    ranks_the = []
 
     inter_token_id1 = tokenizer.convert_tokens_to_ids(intermediate_token)
     inter_token_id2 = tokenizer.convert_tokens_to_ids(f"Ġ{intermediate_token}")
+    the_token_id = tokenizer.convert_tokens_to_ids("the")
     
     for t, hidden in enumerate(selected_hidden, start=1):
         hidden_norm = model.transformer.ln_f(hidden)
@@ -108,7 +110,10 @@ def logit_coda_intermediate_rank_lens(model, tokenizer, messages, num_steps, int
         rank_inter1 = (sorted_indices == inter_token_id1).nonzero(as_tuple=False).item()
         rank_inter2 = (sorted_indices == inter_token_id2).nonzero(as_tuple=False).item()
         rank_inter_min = min(rank_inter1, rank_inter2)
+
+        rank_the = (sorted_indices == the_token_id).nonzero(as_tuple=False).item()
         ranks_intermediate.append(rank_inter_min + 1)
+        ranks_the.append(rank_the + 1)
 
     
     first_prelude_handle.remove()
@@ -119,17 +124,17 @@ def logit_coda_intermediate_rank_lens(model, tokenizer, messages, num_steps, int
     hook_handle.remove()
     first_hook_handle.remove()
     second_hook_handle.remove()
-    return ranks, ranks_intermediate
+    return ranks, ranks_intermediate, ranks_the
 
 
     
 
 
 if __name__ == "__main__":
-    num_steps = 64
 
-    model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True)
-    tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125")
+    commit = "2a364bd96e3eaa831be324f7c1f9e74892e4e594"
+    model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True, revision=commit)
+    tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125", revision=commit)
     model.eval().to(device)
     
     from tqdm import tqdm
@@ -149,19 +154,23 @@ if __name__ == "__main__":
     
     results = []
     rank_inters = []
+    rank_thes = []
 
     for i in tqdm(range(num_example_context, len(ds))):
         test_message = copy.deepcopy(messages)
         test_message.append({"role": "user", "content": ds[i]["context"]})
-        result, rank_inter = logit_coda_intermediate_rank_lens(model, tokenizer, test_message, num_steps=16, intermediate_token=ds[i]["intermediate"].strip())
+        result, rank_inter, rank_the = logit_coda_intermediate_rank_lens(model, tokenizer, test_message, num_steps=16, intermediate_token=ds[i]["intermediate"].strip())
 
         results.append(result)
         rank_inters.append(rank_inter)
+        rank_thes.append(rank_the)
 
-    print(results)
-    print(rank_inters)
+    #print(results)
+    #print(rank_inters)
     with open("cot_weights/arithmetic_correct_rank_results_16.pkl", "wb") as f:
        pickle.dump(results, f)
     with open("cot_weights/arithmetic_inter_rank_results_16.pkl", "wb") as f:
        pickle.dump(rank_inters, f)
+    with open("cot_weights/arithmetic_the_rank_results_16.pkl", "wb") as f:
+       pickle.dump(rank_thes, f)
 

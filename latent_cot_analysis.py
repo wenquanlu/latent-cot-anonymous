@@ -75,9 +75,9 @@ def get_answer_for_manual(model, tokenizer, messages, num_steps):
 
     return trim_output(decoded_output)
 
-
-model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True)
-tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125")
+commit = "2a364bd96e3eaa831be324f7c1f9e74892e4e594"
+model = AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125", torch_dtype=torch.bfloat16, trust_remote_code=True, revision=commit)
+tokenizer = AutoTokenizer.from_pretrained("tomg-group-umd/huginn-0125", revision=commit)
 model.eval().to(device)
 from datasets import load_dataset
 from tqdm import tqdm
@@ -120,6 +120,6 @@ for i in tqdm(range(num_example_context, len(single_digit_rows))): # , 100 + num
         acc += 1
 
 import json
-with open("filtered_arithmetic_dataset.json", "w") as f:
+with open("filtered_arithmetic_dataset2.json", "w") as f:
     json.dump(filtered_dataset, f, indent=4) 
 print("acc:", acc)
