@@ -175,11 +175,11 @@ if __name__ == "__main__":
         intermediate_token_rank.clear()
         the_token_rank.clear()
 
-    # with open("cot_weights/coda_arithmetic_correct_rank_16.pkl", "wb") as f:
-    #     pickle.dump(rank_results, f)
+    with open("cot_weights/coda_arithmetic_correct_rank_16.pkl", "wb") as f:
+        pickle.dump(rank_results, f)
 
-    # with open("cot_weights/coda_arithmetic_intern_rank_16.pkl", "wb") as f:
-    #     pickle.dump(intermediate_rank_results, f)    
+    with open("cot_weights/coda_arithmetic_inter_rank_16.pkl", "wb") as f:
+        pickle.dump(intermediate_rank_results, f)    
     
-    with open("cot_weights/coda_arithmetic_the_rank_16_test.pkl", "wb") as f:
+    with open("cot_weights/coda_arithmetic_the_rank_16.pkl", "wb") as f:
         pickle.dump(random_the_results, f)

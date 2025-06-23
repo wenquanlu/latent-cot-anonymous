@@ -168,8 +168,8 @@ if __name__ == "__main__":
         intermediate_coda_token.clear()
         top_token_rank.clear()
     
-    with open("coda_arithmetic_rank_16_with_prelude.pkl", "wb") as f:
+    with open("cot_weights/coda_arithmetic_rank_16_with_prelude.pkl", "wb") as f:
         pickle.dump(rank_results, f)
         
-    with open("coda_arithmetic_results_top5_16_with_prelude.pkl", "wb") as f:
+    with open("cot_weights/coda_arithmetic_results_top5_16_with_prelude.pkl", "wb") as f:
         pickle.dump(results, f)

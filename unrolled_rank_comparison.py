@@ -6,8 +6,8 @@ rcParams['axes.linewidth'] = 1.2  # All subplot borders (left, bottom, top, righ
 rcParams['lines.linewidth'] = 2.0
 
 # Load data
-logit_data = pickle.load(open("arithmetic_rank_results_16.pkl", "rb"))
-coda_data = pickle.load(open("coda_arithmetic_rank_16_with_prelude.pkl", "rb"))
+logit_data = pickle.load(open("cot_weights/arithmetic_rank_results_16.pkl", "rb"))
+coda_data = pickle.load(open("cot_weights/coda_arithmetic_rank_16_with_prelude.pkl", "rb"))
 
 # Compute averages
 def compute_average(data, length):

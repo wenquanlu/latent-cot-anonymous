@@ -120,6 +120,6 @@ for i in tqdm(range(num_example_context, len(single_digit_rows))): # , 100 + num
         acc += 1
 
 import json
-with open("filtered_arithmetic_dataset2.json", "w") as f:
+with open("filtered_arithmetic_dataset.json", "w") as f:
     json.dump(filtered_dataset, f, indent=4) 
 print("acc:", acc)

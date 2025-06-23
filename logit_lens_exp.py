@@ -150,9 +150,9 @@ if __name__ == "__main__":
         rank, top5 = logit_coda_rank_lens(model, tokenizer, test_message, 16)
         ranks.append([i + 1 for i in rank])
 
-    with open("arithmetic_rank_results_16.pkl", "wb") as f:
+    with open("cot_weights/arithmetic_rank_results_16.pkl", "wb") as f:
        pickle.dump(ranks, f)
 
-    with open("arithmetic_results_top5_16.pkl", "wb") as f:
+    with open("cot_weights/arithmetic_results_top5_16.pkl", "wb") as f:
         pickle.dump(top5, f)
 
