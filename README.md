@@ -16,7 +16,7 @@ python logit_lens_exp.py
 
 Compute rank trajectory of predicted token via coda lens, also compute the top-5 tokens decoded from each layer via coda lens:
 ```shell
-python local_exp.py
+python coda_lens_exp.py
 ```
 
 Visualize graph for rank trajectory: 
@@ -24,7 +24,7 @@ Visualize graph for rank trajectory:
 python unrolled_rank_comparison.py
 ```
 
-Visualize graph for prportion of top-5 tokens that are signed numeric prefixes: 
+Visualize graph for proportion of top-5 tokens that are signed numeric prefixes: 
 ```shell
 python frequency_analysis_combined.py
 ```
@@ -34,7 +34,7 @@ python frequency_analysis_combined.py
 
 We first filter the dataset to the subset that the models answers correctly and have single-digit answer:
 ```shell
-python latent_cot_analysis.py 
+python filter_dataset.py 
 ```
 
 Compute rank trajectories for intermediate, final result tokens and a random 'the' token decoded via logit lens
@@ -44,7 +44,7 @@ python logit_lens_exp_inter.py
 
 Compute rank trajectories for intermediate, final result tokens and a random 'the' token decoded via coda lens
 ```shell
-python local_exp_inter.py
+python coda_lens_exp_inter.py
 ```
 
 Visualize the graph for rank trajectories of intermediate, final result tokens
