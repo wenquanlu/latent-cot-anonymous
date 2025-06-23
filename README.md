@@ -8,7 +8,10 @@ Chain-of-thought (CoT) reasoning has enabled transformer-based language models t
 First download weights *.safetensors from [this link](https://huggingface.co/tomg-group-umd/huginn-0125/commit/2a364bd96e3eaa831be324f7c1f9e74892e4e594) to huginn-predrank/ and huginn-trace/ .
 
 ### We dicover significant discontinuities in hidden space interpretability in depth recurrent transformer.
-
+<figure>
+<img src="graphs/lens_comparison_unrolled_rank_with_prelude.png", width=45%>
+<img src="graphs/arithmetic_numeric_combined.png", width=45%>
+</figure>
 Compute rank trajectory of predicted token via logit lens, also compute the top-5 tokens decoded from each layer via logit lens:
 ```shell
 python logit_lens_exp.py
@@ -31,6 +34,10 @@ python frequency_analysis_combined.py
 
 
 ### We trace the rank trajectory of the intermediate and final result tokens in one-digit composite arithmetic task, but find little evidence for latent CoT.
+
+<figure>
+<img src="graphs/inter_block.png">
+</figure>
 
 We first filter the dataset to the subset that the models answers correctly and have single-digit answer:
 ```shell
